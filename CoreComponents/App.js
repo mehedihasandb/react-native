@@ -1,19 +1,28 @@
-import { StatusBar } from "expo-status-bar";
-import { Pressable, ScrollView } from "react-native";
-import { Text, View, Image, ImageBackground, Button, Modal } from "react-native";
+// import { StatusBar } from "expo-status-bar";
+import { Pressable, ScrollView, StatusBar} from "react-native";
+import {
+  Text,
+  View,
+  Image,
+  ImageBackground,
+  Button,
+  Modal,
+} from "react-native";
+import { useState } from "react";
 
 const logoUrl = require("./assets/splash-icon.png");
-const [modalVisible, setModalVisible] = useState(false);
 
 export default function App() {
+  const [modalVisible, setModalVisible] = useState(false);
   return (
     <View style={{ backgroundColor: "plum", flex: 1, padding: 60 }}>
+      <StatusBar backgroundColor="lightgreen" barStyle="light-content" />
       <Button
         title="Click Me"
         // onPress={() => {
         //   alert("Button Clicked");
         // }}
-        onPress= {() => setModalVisible(true)}
+        onPress={() => setModalVisible(true)}
         color="orange"
       />
       <ScrollView>
@@ -42,11 +51,21 @@ export default function App() {
         </Pressable>
         <Image source={logoUrl} style={{ width: 300, height: 300 }} /> */}
       </ScrollView>
-      <Modal 
-      open={modalVisible}
-      transparent={true}
-      
-      />
+      <Modal
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <View style={{ flex: 1, backgroundColor: "Black", padding: 50 }}>
+          <Text>Modal Opened</Text>
+          <Button
+            title="Modal Close"
+            onPress={() => setModalVisible(false)}
+            color="orange"
+          />
+        </View>
+      </Modal>
     </View>
   );
 }
