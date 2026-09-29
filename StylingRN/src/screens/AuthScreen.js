@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,16 +13,21 @@ import Button from "../components/Button";
 import FormField from "../components/FormField";
 import { colors } from "../theme";
 import { validateAuth } from "../utils/validation";
+import { login } from "../services/auth";
 
 const empty = { name: "", email: "", password: "", confirmPassword: "" };
-export default function AuthScreen() {
+export default function AuthScreen({ onLogin }) {
   const wide = useWindowDimensions().width >= 900;
   const [mode, setMode] = useState("login");
   const [values, setValues] = useState(empty);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState(false);
+  const submitting = useRef(false);
   const register = mode === "register";
   function switchMode(next) {
+    if (submitting.current) return;
     setMode(next);
     setValues(empty);
     setErrors({});
@@ -33,22 +38,34 @@ export default function AuthScreen() {
     setErrors((previous) => ({ ...previous, [field]: undefined }));
     setMessage("");
   }
-  function submit() {
+  async function submit() {
+    if (submitting.current) return;
+    setMessage("");
+    setLoginError(false);
     const nextErrors = validateAuth(values, register);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
-    setMessage(
-      register
-        ? `Looking good, ${values.name.trim()}! Form validated. Connect a backend to create your account.`
-        : "Form validated. Connect an authentication backend to sign in securely.",
-    );
-    setValues((previous) => ({
-      ...previous,
-      password: "",
-      confirmPassword: "",
-    }));
+    if (register) {
+      setMessage("Account creation is not connected yet. Please sign in with an existing account.");
+      return;
+    }
+    submitting.current = true;
+    setLoading(true);
+    try {
+      const session = await login(values);
+      setValues((previous) => ({ ...previous, password: "", confirmPassword: "" }));
+      setMessage("Signed in successfully.");
+      onLogin?.(session);
+    } catch (error) {
+      setLoginError(true);
+      setMessage(error.message);
+    } finally {
+      submitting.current = false;
+      setLoading(false);
+    }
   }
   const fieldProps = (field) => ({
+    editable: !loading,
     value: values[field],
     onChangeText: (value) => change(field, value),
     error: errors[field],
@@ -114,6 +131,7 @@ export default function AuthScreen() {
                 {["login", "register"].map((tab) => (
                   <Pressable
                     key={tab}
+                    disabled={loading}
                     accessibilityRole="tab"
                     accessibilityState={{ selected: mode === tab }}
                     onPress={() => switchMode(tab)}
@@ -162,7 +180,7 @@ export default function AuthScreen() {
                 label="Password"
                 placeholder={
                   register
-                    ? "Create a password (8+ characters)"
+                    ? "Create a password (6+ characters)"
                     : "Enter your password"
                 }
                 password
@@ -188,13 +206,14 @@ export default function AuthScreen() {
               )}
               {message ? (
                 <View style={styles.notice}>
-                  <Text accessibilityRole="alert" style={styles.noticeText}>
+                  <Text accessibilityRole="alert" style={[styles.noticeText, loginError && { color: colors.error }]}>
                     {message}
                   </Text>
                 </View>
               ) : null}
               <Button
-                title={register ? "Create account" : "Sign in"}
+                title={loading ? "Signing in..." : register ? "Create account" : "Sign in"}
+                disabled={loading}
                 onPress={submit}
               />
               <View style={styles.switchRow}>
@@ -203,6 +222,7 @@ export default function AuthScreen() {
                 </Text>
                 <Pressable
                   accessibilityRole="button"
+                  disabled={loading}
                   onPress={() => switchMode(register ? "login" : "register")}
                   style={styles.linkButton}
                 >

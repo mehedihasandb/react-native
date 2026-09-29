@@ -23,4 +23,8 @@ src/utils/validation.js      Pure form validation
 
 ## Authentication integration
 
-This is a UI demo, not real authentication. Submission validates inputs and displays a preview message. Passwords are cleared after valid submission; credentials are not logged or persisted. Replace the successful validation branch in `submit()` with your authentication API/provider. Add server-side validation, loading/error handling, secure sessions, email verification and password recovery before production use.
+Sign-in sends the entered email and password to `http://192.168.10.69:4000/auth/login/GLSC`. The returned session is kept in memory until sign-out or reload. Registration is not connected.
+
+For Expo web development, `metro.config.js` forwards `/api/auth/login/GLSC` to that fixed API address, because the API does not allow the local web origin through CORS. Restart Expo after changing Metro configuration: `npm run web -- --clear`.
+
+Native devices contact the API directly and need network access to `192.168.10.69`. The proxy is development-only; a deployed website needs backend CORS configured for its origin or an equivalent same-origin server route.

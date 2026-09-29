@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 import { colors } from "../theme";
-export default function Button({ title, onPress }) {
+export default function Button({ title, onPress, disabled = false }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.button, pressed && { opacity: 0.8 }]}
+      style={({ pressed }) => [styles.button, (pressed || disabled) && { opacity: 0.6 }]}
     >
       <Text style={styles.text}>{title}</Text>
       <Text style={styles.arrow}>→</Text>
